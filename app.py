@@ -6,6 +6,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
+print(app.config['MAX_CONTENT_LENGTH'])
 
 class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -29,7 +30,6 @@ def index():
             return redirect('/')
         except:
             return 'There was an issue adding your task'
-        return render_template('index.html')
     else:
         tasks = Todo.query.order_by(Todo.date_created).all()
         return render_template('index.html', tasks=tasks)
@@ -46,9 +46,20 @@ def delete(id):
     
     
 
-@app.route('/update')
-def update():
-    return render_template('update.html')
+@app.route('/update/<int:id>',  methods=['POST', 'GET'])
+def update(id):
+    task = Todo.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        task.content = request.form['content2']
+        try:
+            db.session.commit()
+            return redirect('/')
+        except:
+            return 'There was a problem updating that task'
+    else:
+        return render_template('update.html', task=task)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
